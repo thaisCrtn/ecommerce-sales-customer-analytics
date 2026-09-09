@@ -69,7 +69,6 @@ The main objectives of this project are to:
 
 The project will use several SQL techniques, including:
 
-```text
 SELECT
 WHERE
 JOIN
@@ -87,7 +86,7 @@ OVER()
 PARTITION BY
 
 ---
-# 🇬🇧 Português
+# 🇧🇷 Português
 
 # E-commerce Sales & Customer Analytics
 
