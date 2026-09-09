@@ -1,0 +1,87 @@
+# =========================
+# Operating System
+# =========================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+
+# =========================
+# VS Code
+# =========================
+
+.vscode/
+
+# Keep useful VS Code configuration if needed
+# !.vscode/settings.json
+
+
+# =========================
+# Local data
+# =========================
+
+# Local datasets
+data/*.csv
+data/*.xlsx
+data/*.xls
+data/*.json
+
+# Local database files
+*.db
+*.sqlite
+*.sqlite3
+
+# SQL dumps / backups
+*.sql.bak
+*.dump
+*.backup
+
+
+# =========================
+# Environment / Secrets
+# =========================
+
+.env
+.env.*
+!.env.example
+
+# Credentials
+*.pem
+*.key
+
+
+# =========================
+# Python (if used later)
+# =========================
+
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+
+
+# =========================
+# Logs
+# =========================
+
+*.log
+
+
+# =========================
+# Temporary files
+# =========================
+
+*.tmp
+*.temp
+*.swp
+*.swo
