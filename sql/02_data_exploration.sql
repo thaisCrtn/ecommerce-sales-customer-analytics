@@ -150,3 +150,102 @@ GROUP BY customer_type
 ORDER BY percentage_of_customers DESC;
 
 -- How many customers made 1, 2, 3, 4+ completed orders?
+
+WITH customer_orders AS (
+    SELECT 
+        c.customer_id,
+        COUNT(DISTINCT o.order_id) AS total_orders
+    FROM orders o
+        JOIN customers c ON c.customer_id = o.customer_id
+    WHERE o.status = 'Completed'
+    GROUP BY c.customer_id
+),
+order_frequency AS (
+    SELECT 
+        customer_id,
+        CASE 
+            WHEN total_orders = 1 THEN '1 order'
+            WHEN total_orders = 2 THEN '2 orders'
+            WHEN total_orders = 3 THEN '3 orders'
+            ELSE '4+ orders'
+        END AS frequency
+    FROM customer_orders
+)
+SELECT 
+    frequency,
+    COUNT (*) AS customer_count
+FROM order_frequency
+GROUP BY frequency
+ORDER BY CASE frequency
+        WHEN '1 order' THEN 1
+        WHEN '2 orders' THEN 2
+        WHEN '3 orders' THEN 3
+        ELSE 4
+    END;
+
+-- Which product categories generate the most revenue?
+
+SELECT 
+    p.category,
+    ROUND(SUM(oi.quantity * oi.unit_price), 2) AS revenue
+FROM products p
+    JOIN order_items oi ON p.product_id = oi.product_id
+    JOIN orders o ON o.order_id = oi.order_id
+WHERE o.status = 'Completed'
+GROUP BY p.category
+ORDER BY revenue DESC;
+
+-- What percentage of total revenue comes from each product category?
+
+WITH category_revenue AS (
+    SELECT 
+    p.category,
+    ROUND(SUM(oi.quantity * oi.unit_price), 2) AS revenue
+FROM products p
+    JOIN order_items oi ON p.product_id = oi.product_id
+    JOIN orders o ON o.order_id = oi.order_id
+WHERE o.status = 'Completed'
+GROUP BY p.category
+)
+SELECT
+    category,
+    revenue,
+    ROUND(revenue / SUM(revenue) OVER () * 100.0, 2) AS percentage_category
+FROM category_revenue cr
+ORDER BY percentage_category DESC;
+
+-- What is the top-selling product in each category?
+
+WITH product_revenue AS (
+    SELECT
+        p.category,
+        p.product_name,
+        ROUND(SUM(oi.quantity * oi.unit_price), 2) AS revenue
+    FROM products p
+        JOIN order_items oi ON p.product_id = oi.product_id
+        JOIN orders o ON oi.order_id = o.order_id
+    WHERE o.status = 'Completed'
+    GROUP BY p.category, p.product_name
+),
+ranked_products AS (
+    SELECT 
+        category,
+        product_name,
+        revenue,
+        RANK() OVER (
+            PARTITION BY category
+            ORDER BY revenue DESC
+        ) AS product_rank
+    FROM product_revenue
+)
+SELECT 
+    category,
+    product_name,
+    revenue,
+    product_rank
+FROM ranked_products
+WHERE product_rank = 1
+ORDER BY category;
+
+-- What is the top-selling product in each category?
+
