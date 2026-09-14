@@ -247,5 +247,246 @@ FROM ranked_products
 WHERE product_rank = 1
 ORDER BY category;
 
--- What is the top-selling product in each category?
+-- Which product generates the most revenue in each category?
 
+WITH product_revenue AS (
+    SELECT
+        p.category,
+        p.product_id,
+        p.product_name,
+        ROUND(SUM(oi.quantity * oi.unit_price), 2) AS revenue
+    FROM products p
+        JOIN order_items oi ON p.product_id = oi.product_id
+        JOIN orders o ON oi.order_id = o.order_id
+    WHERE o.status = 'Completed'
+    GROUP BY p.category, p.product_id, p.product_name
+),
+ranked_products AS (
+    SELECT 
+        category,
+        product_id,
+        product_name,
+        revenue,
+        ROW_NUMBER() OVER (
+            PARTITION BY category
+            ORDER BY revenue DESC, product_id
+        ) AS product_row_number
+    FROM product_revenue
+)
+SELECT 
+    category,
+    product_name,
+    revenue,
+    product_row_number
+FROM ranked_products
+WHERE product_row_number = 1
+ORDER BY category;
+
+-- How do products rank within each category based on revenue?
+
+WITH product_revenue AS (
+    SELECT
+        p.category,
+        p.product_id,
+        p.product_name,
+        ROUND(SUM(oi.quantity * oi.unit_price), 2) AS revenue
+    FROM products p
+        JOIN order_items oi ON p.product_id = oi.product_id
+        JOIN orders o ON oi.order_id = o.order_id
+    WHERE o.status = 'Completed'
+    GROUP BY p.category, p.product_id, p.product_name
+),
+ranked_products AS (
+    SELECT 
+        category,
+        product_id,
+        product_name,
+        revenue,
+        RANK() OVER (
+            PARTITION BY category
+            ORDER BY revenue DESC
+        ) AS revenue_rank,
+        DENSE_RANK() OVER (
+            PARTITION BY category
+            ORDER BY revenue DESC
+        ) AS revenue_dense_rank,
+        ROW_NUMBER() OVER (
+            PARTITION BY category
+            ORDER BY revenue DESC
+        ) AS revenue_row_number
+    FROM product_revenue
+)
+SELECT 
+    category,
+    product_name,
+    revenue,
+    revenue_rank,
+    revenue_dense_rank,
+    revenue_row_number
+FROM ranked_products
+WHERE revenue_rank <= 5
+ORDER BY category, revenue_rank;
+
+-- Which customers increased or decreased their spending over time?
+
+WITH customer_monthly_spending AS (
+    SELECT
+        c.customer_id,
+        c.customer_name,
+        TO_CHAR(o.order_date, 'YYYY-MM') AS order_month,
+        ROUND(SUM(oi.quantity * oi.unit_price), 2) AS monthly_spending
+    FROM customers c
+        JOIN orders o ON c.customer_id = o.customer_id
+        JOIN order_items oi ON o.order_id = oi.order_id
+    WHERE o.status = 'Completed'
+    GROUP BY c.customer_id, c.customer_name, TO_CHAR(o.order_date, 'YYYY-MM')
+),
+customer_spending_with_lag AS (
+    SELECT
+        customer_id,
+        customer_name,
+        order_month,
+        monthly_spending,
+        LAG(monthly_spending) OVER (
+            PARTITION BY customer_id
+            ORDER BY order_month
+        ) AS previous_monthly_spending
+    FROM customer_monthly_spending
+)
+SELECT
+    customer_id,
+    customer_name,
+    order_month,
+    monthly_spending,
+    previous_monthly_spending,
+    ROUND(monthly_spending - previous_monthly_spending, 2) AS spending_change,
+    CASE
+        WHEN monthly_spending - previous_monthly_spending > 0
+            THEN 'Increased'
+        WHEN monthly_spending - previous_monthly_spending < 0
+            THEN 'Decreased'
+        ELSE 'No change'
+    END AS spending_trend
+FROM customer_spending_with_lag
+WHERE previous_monthly_spending IS NOT NULL
+ORDER BY customer_id, order_month;
+
+-- When did each customer make their first and last completed purchase?
+
+SELECT 
+    c.customer_id,
+    c.customer_name,
+    MIN(o.order_date) AS first_purchase_date,
+    MAX(o.order_date) AS last_purchase_date
+FROM customers c
+    JOIN orders o ON c.customer_id = o.customer_id
+WHERE o.status = 'Completed'
+GROUP BY c.customer_id, c.customer_name
+ORDER BY first_purchase_date;
+
+-- How many days did each customer remain active between their first and last purchase?
+
+SELECT 
+    c.customer_id,
+    c.customer_name,
+    MIN(o.order_date) AS first_purchase_date,
+    MAX(o.order_date) AS last_purchase_date,
+    (MAX(o.order_date) - MIN(o.order_date)) AS customer_lifetime_days
+FROM customers c
+    JOIN orders o ON c.customer_id = o.customer_id
+WHERE o.status = 'Completed'
+GROUP BY c.customer_id, c.customer_name
+ORDER BY first_purchase_date;
+
+-- Which customers have been active for at least 1 year between their first and last completed purchase?
+SELECT 
+    c.customer_id,
+    c.customer_name,
+    MIN(o.order_date) AS first_purchase_date,
+    MAX(o.order_date) AS last_purchase_date,
+    (MAX(o.order_date) - MIN(o.order_date)) AS customer_lifetime_days
+FROM customers c
+    JOIN orders o ON c.customer_id = o.customer_id
+WHERE o.status = 'Completed'
+GROUP BY c.customer_id, c.customer_name
+HAVING (MAX(o.order_date) - MIN(o.order_date)) >= 365
+ORDER BY first_purchase_date;
+
+-- What is the cumulative revenue over time?
+
+WITH monthly_revenue AS (
+    SELECT 
+        TO_CHAR(o.order_date, 'YYYY-MM') AS order_month,
+        ROUND(SUM(oi.quantity * oi.unit_price), 2) AS monthly_revenue
+    FROM orders o
+        JOIN order_items oi ON o.order_id = oi.order_id
+    WHERE o.status = 'Completed'
+    GROUP BY TO_CHAR(o.order_date, 'YYYY-MM')
+),
+monthly_revenue_with_cumulative AS (
+    SELECT
+        order_month,
+        monthly_revenue,
+        SUM(monthly_revenue) OVER (ORDER BY order_month) AS cumulative_revenue
+    FROM monthly_revenue
+)
+SELECT 
+    order_month,
+    monthly_revenue,
+    cumulative_revenue
+FROM monthly_revenue_with_cumulative
+ORDER BY order_month;
+
+-- How can we segment customers based on their purchasing behavior?
+
+WITH customer_rfm AS (
+    SELECT
+        c.customer_id,
+        c.customer_name,
+        MAX(o.order_date) AS last_purchase_date,
+        COUNT(DISTINCT o.order_id) AS frequency,
+        ROUND(SUM(oi.quantity * oi.unit_price), 2) AS monetary_value
+    FROM customers c
+        JOIN orders o ON c.customer_id = o.customer_id
+        JOIN order_items oi ON o.order_id = oi.order_id
+    WHERE o.status = 'Completed'
+    GROUP BY c.customer_id, c.customer_name
+)
+SELECT *
+FROM customer_rfm
+ORDER BY monetary_value DESC;
+
+-- How many days have passed since each customer's last purchase?
+
+SELECT 
+    c.customer_id,
+    c.customer_name,
+    MAX(o.order_date) AS last_purchase_date,
+    (DATE '2025-12-31' - MAX(o.order_date)) AS days_since_last_purchase
+FROM customers c
+    JOIN orders o ON c.customer_id = o.customer_id
+WHERE o.status = 'Completed'
+GROUP BY c.customer_id, c.customer_name
+ORDER BY days_since_last_purchase DESC;
+
+SELECT MAX(order_date) AS analysis_date
+FROM orders
+WHERE status = 'Completed';
+
+WITH customer_rfm AS (
+    SELECT
+        c.customer_id,
+        c.customer_name,
+        MAX(o.order_date) AS last_purchase_date,
+        (DATE '2025-12-31' - MAX(o.order_date)) AS recency,
+        COUNT(DISTINCT o.order_id) AS frequency,
+        ROUND(SUM(oi.quantity * oi.unit_price), 2) AS monetary_value
+    FROM customers c
+        JOIN orders o ON c.customer_id = o.customer_id
+        JOIN order_items oi ON o.order_id = oi.order_id
+    WHERE o.status = 'Completed'
+    GROUP BY c.customer_id, c.customer_name
+)
+SELECT *
+FROM customer_rfm
+ORDER BY monetary_value DESC;
