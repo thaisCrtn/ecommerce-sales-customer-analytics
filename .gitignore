@@ -85,3 +85,5 @@ env/
 *.temp
 *.swp
 *.swo
+
+.rascunho.txt
