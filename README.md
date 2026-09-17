@@ -7,7 +7,7 @@
 
 A SQL-based data analytics project focused on e-commerce sales performance, customer behavior, product performance, sales trends, and customer segmentation using PostgreSQL.
 
-> **Key metrics:** €39.09M revenue | 43,077 completed orders | €907.50 average order value | 7,423 purchasing customers
+> **Key metrics:** €39.06M revenue | 43,077 completed orders | €906.76 average order value | 7,423 purchasing customers
 
 ---
 
@@ -39,6 +39,33 @@ The objective of this project is to analyze e-commerce sales and customer behavi
 The analysis was designed around real-world business questions commonly faced by e-commerce companies. It transforms transactional data into actionable insights about revenue performance, customer purchasing behavior, product and category performance, sales trends, and customer retention opportunities.
 
 The project also includes an **RFM (Recency, Frequency, Monetary) customer segmentation** to identify different customer behavior patterns and support targeted retention and loyalty strategies.
+
+---
+
+## Power BI Dashboard
+
+The project includes an interactive Power BI dashboard designed to explore sales performance and customer behavior.
+
+![E-commerce Sales & Customer Analytics Dashboard](images/dashboard.png)
+
+The dashboard includes:
+
+- Total Revenue
+- Completed Orders
+- Average Order Value
+- Purchasing Customers
+- Monthly Revenue Trend
+- Top 10 Customers by Revenue
+- Revenue by Country
+- Revenue by Product Category
+- RFM Customer Segmentation
+- Returning vs One-time Customers
+
+Interactive filters are available for:
+
+- Country
+- Product Category
+- Order Date
 
 ---
 
@@ -188,18 +215,18 @@ Each dimension was scored from **1 to 5 using `NTILE(5)`**, with higher scores r
 
 | Segment | Customers | Share |
 |---|---:|---:|
-| At Risk | 2,297 | **30.94%** |
-| Regular | 2,055 | **27.68%** |
-| High Value | 1,560 | **21.02%** |
-| Engaged | 1,511 | **20.36%** |
+| At Risk | 2,201 | **29.65%** |
+| Regular | 2,139 | **28.82%** |
+| Engaged | 1,582 | **21.31%** |
+| High Value | 1,501 | **20.22%** |
 | **Total** | **7,423** | **100%** |
 
 ### Interpretation
 
-- **At Risk — 30.94%:** The largest segment and a significant retention/reactivation opportunity.
-- **Regular — 27.68%:** Recurring purchasers with potential to increase frequency or spending.
-- **High Value — 21.02%:** A significant group that should be prioritized for loyalty and retention.
-- **Engaged — 20.36%:** Customers with positive engagement who may have potential to become higher-value customers.
+- **At Risk — 29.65%:** The largest customer segment, representing a potential reactivation and retention opportunity.
+- **Regular — 28.82%:** Recurring customers who may have opportunities to increase purchase frequency or spending.
+- **Engaged — 21.31%:** Customers showing positive purchasing behavior who may have potential to become higher-value customers.
+- **High Value — 20.22%:** Customers with strong overall RFM scores who represent an important group for retention and loyalty initiatives.
 
 ---
 
@@ -232,7 +259,7 @@ Repeat the RFM analysis periodically to identify customers moving between segmen
 
 ```text
 ecommerce-sales-customer-analytics/
-│
+
 ├── data/
 │   ├── customers.csv
 │   ├── products.csv
@@ -250,6 +277,9 @@ ecommerce-sales-customer-analytics/
 │   ├── 05_sales_analysis.sql
 │   ├── 06_advanced_analysis.sql
 │   └── 07_project_validation.sql
+│
+├── images/
+│   └── dashboard.png
 │
 ├── .gitignore
 └── README.md
@@ -332,8 +362,8 @@ Products:                   500
 Orders:                  50,000
 Order Items:            131,694
 Completed Orders:        43,077
-Total Revenue:     €39,090,687.01
-Average Order Value:       €907.50
+Total Revenue:     €39,060,687.01
+Average Order Value:       €906.76
 RFM Customers:             7,423
 ```
 
@@ -341,15 +371,18 @@ RFM Customers:             7,423
 
 ## Future Improvements
 
-- Build an interactive Tableau or Power BI dashboard.
-- Create customer retention KPIs.
-- Add customer lifetime value analysis.
-- Analyze cohort retention.
-- Build a more advanced RFM scoring framework.
-- Add automated data quality checks.
-- Create an ETL pipeline using Python.
-- Integrate PostgreSQL with Airflow.
-- Extend the project toward a Data Engineering pipeline.
+Potential extensions of this project include:
+
+- Customer Lifetime Value (CLV)
+- Cohort retention analysis
+- Customer retention KPIs
+- Revenue forecasting
+- Product recommendation analysis
+- Automated data quality checks
+- Python-based ETL pipeline
+- Airflow orchestration
+- Cloud data warehouse integration
+- Extension of the project into a Data Engineering pipeline
 
 ---
 
@@ -381,9 +414,9 @@ O projeto também utiliza **RFM (Recency, Frequency e Monetary)** para segmentar
 
 ### Principais Resultados
 
-- **€39,09 milhões** em receita de pedidos concluídos.
+- **€39,06 milhões** em receita de pedidos concluídos.
 - **43.077 pedidos concluídos**.
-- **€907,50** de ticket médio.
+- **€906,76** de ticket médio.
 - **7.423 clientes** realizaram pelo menos uma compra concluída.
 - Isso representa aproximadamente **74,2% dos 10.000 clientes cadastrados**.
 - Aproximadamente **25,8% dos clientes cadastrados não realizaram uma compra concluída**.
@@ -394,10 +427,10 @@ Entre os 7.423 clientes que realizaram compras concluídas:
 
 | Segmento | Clientes | Percentual |
 |---|---:|---:|
-| At Risk | 2.297 | **30,94%** |
-| Regular | 2.055 | **27,68%** |
-| High Value | 1.560 | **21,02%** |
-| Engaged | 1.511 | **20,36%** |
+| At Risk | 2.201 | **29,65%** |
+| Regular | 2.139 | **28,82%** |
+| Engaged | 1.582 | **21,31%** |
+| High Value | 1.501 | **20,22%** |
 
 ### Principais Insights
 
